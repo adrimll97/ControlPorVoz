@@ -1,12 +1,16 @@
 package es.multimedia.controlporvoz;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.database.Cursor;
 import android.media.Image;
 import android.net.Uri;
+import android.provider.ContactsContract;
 import android.speech.RecognizerIntent;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -21,18 +25,23 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-
+    private  static final int RequestPermissionCode  = 1 ;
     private static final int REQ_CODE_SPEECH_INPUT = 100;
     private TextView mEntradaVoz;
     private ImageButton mBotonHablar;
 
     private PackageManager packageManager;
     private List<App> apps;
+
+    Cursor cursor;
+    private List<Contacto> contactos;
+
     private ListView list;
 
     @Override
@@ -42,6 +51,13 @@ public class MainActivity extends AppCompatActivity {
 
         mEntradaVoz = findViewById(R.id.textoEntrada);
         mBotonHablar = findViewById(R.id.botonHablar);
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(MainActivity.this,new String[]{
+                    Manifest.permission.READ_CONTACTS, Manifest.permission.CALL_PHONE}, RequestPermissionCode);
+        } else {
+            loadContacts();
+        }
 
         mBotonHablar.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -83,9 +99,11 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     if (result.get(0).toLowerCase().equals("aplicaciones")) {
-                        loadListView();
+                        loadListViewApps();
                         addOnClickListenerListApps();
                         mEntradaVoz.setText("Mostrando todas las aplicaciones instalas");
+                    } else if (result.get(0).toLowerCase().equals("contactos")){
+                        mEntradaVoz.setText("Mostrando todos los contactos");
                     } else if (result.get(0).toLowerCase().equals("llamar")) {
                         String call = "tel:675615370";
                         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
@@ -124,7 +142,19 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void loadListView(){
+    private void loadContacts(){
+        contactos = new ArrayList<>();
+        cursor = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,null, null, null);
+
+        while(cursor.moveToNext()){
+            Contacto contacto = new Contacto();
+            contacto.nombre = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+            contacto.telefono = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+            contactos.add(contacto);
+        }
+    }
+
+    private void loadListViewApps(){
         list = findViewById(R.id.list);
         ArrayAdapter<App> adapter = new ArrayAdapter<App>(this, R.layout.apps, apps){
             @NonNull
@@ -154,5 +184,36 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(i);
             }
         });
+    }
+
+    private void cargarPermisos() {
+        AlertDialog.Builder dialogo = new AlertDialog.Builder(MainActivity.this);
+        dialogo.setTitle("Permisos no otorgados");
+        dialogo.setMessage("Debe otorgar permisos de acceso a los contactos para el correcto funcionamiento de la aplicación");
+
+        dialogo.setPositiveButton("Aceptar", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                ActivityCompat.requestPermissions(MainActivity.this,new String[]{
+                        Manifest.permission.READ_CONTACTS, Manifest.permission.CALL_PHONE}, RequestPermissionCode);
+            }
+        });
+        dialogo.show();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int RC, String per[], int[] PResult) {
+
+        switch (RC) {
+
+            case RequestPermissionCode:
+
+                if (PResult.length > 0 && PResult[0] == PackageManager.PERMISSION_GRANTED) {
+                    loadContacts();
+                } else {
+                    cargarPermisos();
+                }
+                break;
+        }
     }
 }
