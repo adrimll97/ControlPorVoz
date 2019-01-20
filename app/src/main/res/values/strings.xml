@@ -1,4 +1,4 @@
 <resources>
-    <string name="app_name">ControlPorVoz</string>
+    <string name="app_name">Control por voz</string>
     <string name="inicio">Pulsa el micrófono y habla, los comando que puedes utilizar son:</string>
 </resources>

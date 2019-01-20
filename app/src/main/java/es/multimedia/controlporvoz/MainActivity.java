@@ -55,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        mEntradaVoz = findViewById(R.id.textView);
         mBotonHablar = findViewById(R.id.botonHablar);
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED){
@@ -105,7 +106,6 @@ public class MainActivity extends AppCompatActivity {
                     String entrada = result.get(0).toLowerCase();
                     StringTokenizer token = new StringTokenizer(entrada, " ");
                     String accion = token.nextToken();
-                    //mEntradaVoz.setText(entrada + "\nacción=" + accion + "\ntarget=" + entrada.substring(accion.length()+1));
 
                     if (token.countTokens() == 0){
                         if (accion.toLowerCase().equals("aplicaciones")){
@@ -119,8 +119,8 @@ public class MainActivity extends AppCompatActivity {
                             textToSpeech.speak("No reconozco ese comando", TextToSpeech.QUEUE_FLUSH, null,null);
                         }
                     } else {
+                        String a = entrada.substring(accion.length()+1);
                         if (accion.toLowerCase().equals("abrir")){
-                            String a = entrada.substring(accion.length()+1);
                             Boolean encontrada = Boolean.FALSE;
                             for (App app : apps){
                                 if (a.toLowerCase().equals(app.nombre.toString().toLowerCase())) {
@@ -133,39 +133,50 @@ public class MainActivity extends AppCompatActivity {
                                 }
                             }
 
-                            if (encontrada == Boolean.FALSE){
+                            if (!encontrada){
                                 textToSpeech.speak("No reconozco la aplicación " + a, TextToSpeech.QUEUE_FLUSH, null,null);
                             }
-                        }
-                    }
+                        } else if (accion.toLowerCase().equals("llamar")){
+                            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+                                ActivityCompat.requestPermissions(MainActivity.this,new String[]{
+                                        Manifest.permission.CALL_PHONE}, RequestPermissionCode);
+                            }
 
-                    /*for (App app : apps){
-                        if (result.get(0).toLowerCase().equals(app.nombre.toString().toLowerCase())) {
-                            Intent launchIntent = getPackageManager().getLaunchIntentForPackage(app.paquete.toString());
-                            if (launchIntent != null) {
-                                startActivity(launchIntent);//null pointer check in case package name was not found
+                            if (isNumeric(a)){
+                                String call = "tel:"+a;
+                                startActivity(new Intent(Intent.ACTION_CALL, Uri.parse(call)));
+                            } else {
+                                Boolean encontrado = Boolean.FALSE;
+                                for (Contacto contacto : contactos){
+                                    if (a.toLowerCase().equals(contacto.nombre.toLowerCase())){
+                                        encontrado = Boolean.TRUE;
+                                        String call = "tel:"+contacto.telefono;
+                                        startActivity(new Intent(Intent.ACTION_CALL, Uri.parse(call)));
+                                    }
+                                }
+                                if (!encontrado) {
+                                    textToSpeech.speak("No reconozco ese contacto " + a, TextToSpeech.QUEUE_FLUSH, null,null);
+                                }
                             }
                         }
                     }
-
-                    if (result.get(0).toLowerCase().equals("aplicaciones")) {
-                        loadListViewApps();
-                        addOnClickListenerListApps();
-                        mEntradaVoz.setText("Mostrando todas las aplicaciones instalas");
-                    } else if (result.get(0).toLowerCase().equals("contactos")){
-                        mEntradaVoz.setText("Mostrando todos los contactos");
-                    } else if (result.get(0).toLowerCase().equals("llamar")) {
-                        String call = "tel:675615370";
-                        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
-                            ActivityCompat.requestPermissions(MainActivity.this,new String[]{
-                                    Manifest.permission.CALL_PHONE}, RequestPermissionCode);
-                        }
-                        startActivity(new Intent(Intent.ACTION_CALL, Uri.parse(call)));
-                    }*/
                 }
                 break;
             }
         }
+    }
+
+    private boolean isNumeric(String a) {
+        Boolean sonNumeros;
+        a = a.replace(" ", "");
+        try{
+            mEntradaVoz.setText(a);
+            Integer.parseInt(a);
+            sonNumeros = Boolean.TRUE;
+        } catch (NumberFormatException e){
+            sonNumeros = Boolean.FALSE;
+        }
+        return sonNumeros;
     }
 
     private void loadApps(){
