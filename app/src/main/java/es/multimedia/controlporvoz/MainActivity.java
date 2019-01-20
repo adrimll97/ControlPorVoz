@@ -3,6 +3,7 @@ package es.multimedia.controlporvoz;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -37,9 +38,8 @@ import java.util.StringTokenizer;
 
 public class MainActivity extends AppCompatActivity {
     private TextToSpeech textToSpeech;
-    private static final int RequestPermissionCode  = 1 ;
+    private static final int RequestPermissionCode = 1;
     private static final int REQ_CODE_SPEECH_INPUT = 100;
-    private TextView mEntradaVoz;
     private ImageButton mBotonHablar;
 
     private PackageManager packageManager;
@@ -55,11 +55,10 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mEntradaVoz = findViewById(R.id.textView);
         mBotonHablar = findViewById(R.id.botonHablar);
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED){
-            ActivityCompat.requestPermissions(MainActivity.this,new String[]{
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{
                     Manifest.permission.READ_CONTACTS, Manifest.permission.CALL_PHONE}, RequestPermissionCode);
         } else {
             loadContacts();
@@ -74,11 +73,10 @@ public class MainActivity extends AppCompatActivity {
         textToSpeech = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
             @Override
             public void onInit(int status) {
-                if(status == TextToSpeech.SUCCESS){
+                if (status == TextToSpeech.SUCCESS) {
                     Locale spanish = new Locale("es", "ES");
                     textToSpeech.setLanguage(spanish);
-                }
-                else Log.e("TTS", "TTS no inicializado");
+                } else Log.e("TTS", "TTS no inicializado");
             }
         });
     }
@@ -107,55 +105,55 @@ public class MainActivity extends AppCompatActivity {
                     StringTokenizer token = new StringTokenizer(entrada, " ");
                     String accion = token.nextToken();
 
-                    if (token.countTokens() == 0){
-                        if (accion.toLowerCase().equals("aplicaciones")){
+                    if (token.countTokens() == 0) {
+                        if (accion.toLowerCase().equals("aplicaciones")) {
                             loadListViewApps();
                             addOnClickListenerListApps();
-                            textToSpeech.speak("Mostrando todas las aplicaciones instaladas", TextToSpeech.QUEUE_FLUSH, null,null);
-                        } else if (accion.toLowerCase().equals("contactos")){
+                            textToSpeech.speak("Mostrando todas las aplicaciones instaladas", TextToSpeech.QUEUE_FLUSH, null, null);
+                        } else if (accion.toLowerCase().equals("contactos")) {
                             loadListViewContacts();
-                            textToSpeech.speak("Mostrando todos los contactos", TextToSpeech.QUEUE_FLUSH, null,null);
+                            textToSpeech.speak("Mostrando todos los contactos", TextToSpeech.QUEUE_FLUSH, null, null);
                         } else {
-                            textToSpeech.speak("No reconozco ese comando", TextToSpeech.QUEUE_FLUSH, null,null);
+                            textToSpeech.speak("No reconozco ese comando", TextToSpeech.QUEUE_FLUSH, null, null);
                         }
                     } else {
-                        String a = entrada.substring(accion.length()+1);
-                        if (accion.toLowerCase().equals("abrir")){
+                        String a = entrada.substring(accion.length() + 1);
+                        if (accion.toLowerCase().equals("abrir")) {
                             Boolean encontrada = Boolean.FALSE;
-                            for (App app : apps){
+                            for (App app : apps) {
                                 if (a.toLowerCase().equals(app.nombre.toString().toLowerCase())) {
                                     Intent launchIntent = getPackageManager().getLaunchIntentForPackage(app.paquete.toString());
                                     if (launchIntent != null) {
                                         encontrada = Boolean.TRUE;
-                                        textToSpeech.speak("Abriendo " + a, TextToSpeech.QUEUE_FLUSH, null,null);
+                                        textToSpeech.speak("Abriendo " + a, TextToSpeech.QUEUE_FLUSH, null, null);
                                         startActivity(launchIntent);//null pointer check in case package name was not found
                                     }
                                 }
                             }
 
-                            if (!encontrada){
-                                textToSpeech.speak("No reconozco la aplicación " + a, TextToSpeech.QUEUE_FLUSH, null,null);
+                            if (!encontrada) {
+                                textToSpeech.speak("No reconozco la aplicación " + a, TextToSpeech.QUEUE_FLUSH, null, null);
                             }
-                        } else if (accion.toLowerCase().equals("llamar")){
+                        } else if (accion.toLowerCase().equals("llamar")) {
                             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
-                                ActivityCompat.requestPermissions(MainActivity.this,new String[]{
+                                ActivityCompat.requestPermissions(MainActivity.this, new String[]{
                                         Manifest.permission.CALL_PHONE}, RequestPermissionCode);
                             }
 
-                            if (isNumeric(a)){
-                                String call = "tel:"+a;
+                            if (isNumeric(a)) {
+                                String call = "tel:" + a;
                                 startActivity(new Intent(Intent.ACTION_CALL, Uri.parse(call)));
                             } else {
                                 Boolean encontrado = Boolean.FALSE;
-                                for (Contacto contacto : contactos){
-                                    if (a.toLowerCase().equals(contacto.nombre.toLowerCase())){
+                                for (Contacto contacto : contactos) {
+                                    if (a.toLowerCase().equals(contacto.nombre.toLowerCase())) {
                                         encontrado = Boolean.TRUE;
-                                        String call = "tel:"+contacto.telefono;
+                                        String call = "tel:" + contacto.telefono;
                                         startActivity(new Intent(Intent.ACTION_CALL, Uri.parse(call)));
                                     }
                                 }
                                 if (!encontrado) {
-                                    textToSpeech.speak("No reconozco ese contacto " + a, TextToSpeech.QUEUE_FLUSH, null,null);
+                                    textToSpeech.speak("No reconozco ese contacto " + a, TextToSpeech.QUEUE_FLUSH, null, null);
                                 }
                             }
                         }
@@ -169,17 +167,16 @@ public class MainActivity extends AppCompatActivity {
     private boolean isNumeric(String a) {
         Boolean sonNumeros;
         a = a.replace(" ", "");
-        try{
-            mEntradaVoz.setText(a);
+        try {
             Integer.parseInt(a);
             sonNumeros = Boolean.TRUE;
-        } catch (NumberFormatException e){
+        } catch (NumberFormatException e) {
             sonNumeros = Boolean.FALSE;
         }
         return sonNumeros;
     }
 
-    private void loadApps(){
+    private void loadApps() {
         packageManager = getPackageManager();
         apps = new ArrayList<>();
 
@@ -187,7 +184,7 @@ public class MainActivity extends AppCompatActivity {
         i.addCategory(Intent.CATEGORY_LAUNCHER);
 
         List<ResolveInfo> disponible = packageManager.queryIntentActivities(i, 0);
-        for (ResolveInfo ri : disponible){
+        for (ResolveInfo ri : disponible) {
             App app = new App(
                     ri.activityInfo.packageName,
                     ri.loadLabel(packageManager),
@@ -198,11 +195,11 @@ public class MainActivity extends AppCompatActivity {
         Collections.sort(apps);
     }
 
-    private void loadContacts(){
+    private void loadContacts() {
         contactos = new ArrayList<>();
-        cursor = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,null, null, null);
+        cursor = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, null, null, null);
 
-        while(cursor.moveToNext()){
+        while (cursor.moveToNext()) {
             Contacto contacto = new Contacto(
                     cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)),
                     cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
@@ -212,15 +209,14 @@ public class MainActivity extends AppCompatActivity {
         Collections.sort(contactos);
     }
 
-
-    private void loadListViewApps(){
+    private void loadListViewApps() {
         list = findViewById(R.id.list);
-        ArrayAdapter<App> adapter = new ArrayAdapter<App>(this, R.layout.apps, apps){
+        ArrayAdapter<App> adapter = new ArrayAdapter<App>(this, R.layout.apps, apps) {
             @NonNull
             @Override
             public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-                if (convertView == null){
-                    convertView =  getLayoutInflater().inflate(R.layout.apps, null);
+                if (convertView == null) {
+                    convertView = getLayoutInflater().inflate(R.layout.apps, null);
                 }
                 ImageView appIcon = (ImageView) convertView.findViewById(R.id.icon);
                 appIcon.setImageDrawable(apps.get(position).icono);
@@ -235,13 +231,13 @@ public class MainActivity extends AppCompatActivity {
         list.setAdapter(adapter);
     }
 
-    private void loadListViewContacts(){
+    private void loadListViewContacts() {
         list = findViewById(R.id.list);
-        ArrayAdapter<Contacto> adapter = new ArrayAdapter<Contacto>(this, R.layout.contactos, contactos){
+        ArrayAdapter<Contacto> adapter = new ArrayAdapter<Contacto>(this, R.layout.contactos, contactos) {
             @NonNull
             @Override
             public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-                if (convertView == null){
+                if (convertView == null) {
                     convertView = getLayoutInflater().inflate(R.layout.contactos, null);
                 }
                 TextView contactNombre = (TextView) convertView.findViewById(R.id.name);
@@ -257,7 +253,7 @@ public class MainActivity extends AppCompatActivity {
         list.setAdapter(adapter);
     }
 
-    private void addOnClickListenerListApps(){
+    private void addOnClickListenerListApps() {
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
