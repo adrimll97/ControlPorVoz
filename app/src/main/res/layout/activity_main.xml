@@ -8,28 +8,10 @@
     tools:context="es.multimedia.controlporvoz.MainActivity">
 
 
-    <ScrollView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="11dp"
-        android:layout_marginTop="13dp"
-        android:layout_marginEnd="13dp"
-        android:layout_marginBottom="13dp">
-
-        <TextView
-            android:id="@+id/textoEntrada"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="@dimen/margin"
-            android:layout_marginTop="@dimen/margin"
-            android:layout_marginRight="@dimen/margin"
-            android:gravity="center" />
-    </ScrollView>
-
     <ListView
         android:id="@+id/list"
         android:layout_width="match_parent"
-        android:layout_height="571dp"
+        android:layout_height="630dp"
         android:layout_margin="@dimen/margin" />
 
     <ImageButton
